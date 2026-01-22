@@ -59,7 +59,7 @@ tfoot th,tfoot td{ border:none!important;}
 <!-- FLOAT BUTTON -->
 <div id="floatBtn"><img src="img/float.svg"></div>
 
-<div class="container py-5">
+<div class="container py-2">
 
   <!-- HEADER -->
   <div class="d-flex justify-content-between px-2 border-bottom">
@@ -334,7 +334,7 @@ async function loadSheets(){
     }
 
     sheetSelect.innerHTML =
-      `<option val="">Pilih</option>` +
+      `<option disabled selected>Pilih</option>` +
       r.data.map(v=>`<option value="${v}">${v}</option>`).join('');
 
     sheetSelect.onchange = async ()=>{
