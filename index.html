@@ -46,7 +46,7 @@ tfoot th,tfoot td{border:none!important;}
 <!-- FLOAT BUTTON -->
 <div id="floatBtn" class="d-none"><img src="img/float.svg"></div>
 
-<div class="container py-5 d-none" id="mainContainer">
+<div class="container py-2 d-none" id="mainContainer">
   <!-- HEADER -->
   <div class="d-flex justify-content-between px-2 border-bottom align-items-center">
     <div class="fs-1 mt-3 fw-bold text-info" style="text-shadow:1px 4px 4px #000">
@@ -215,12 +215,8 @@ const url = 'https://script.google.com/macros/s/AKfycbyUS5u9eqEs4GmkZ18b-9mFwlm8
 const $ = id => document.getElementById(id);
 const isTrue = v => v===true || v==='TRUE' || v==='true' || v===1 || v==='1';
 
-const times  = new Date().toLocaleDateString('id-ID',{weekday:'long',day:'2-digit',month:'short',year:'numeric'});
-const hours = new Date().toLocaleString('id-ID', { hour: '2-digit',minute: '2-digit'});
-const months = new Date().toLocaleDateString('id-ID',{month:'long',year:'numeric'});
-
 /* == STATE == */
-const state = {sheet:'',month:'',data:[],view:[],};
+const state = {sheet:'',month:'',data:[],view:[],times: new Date().toLocaleDateString('id-ID',{weekday:'long',day:'2-digit',month:'short',year:'numeric'}),hours: new Date().toLocaleString('id-ID', { hour: '2-digit',minute: '2-digit'}),months: new Date().toLocaleDateString('id-ID',{month:'long',year:'numeric'})};
 
 /* == STORAGE KEY == */
 const LOGIN_KEY = 'jobActivityLogin';
@@ -244,6 +240,7 @@ async function loadEmployee() {
     EMPLOYEES = Array.isArray(r.data) ? r.data : [];
     if (!EMPLOYEES.length) {wages.value = 0; return;}
     ACTIVE_EMP = EMPLOYEES[0];
+    datestamp.textContent=state.times;
     updateWages();
   } catch (err) {console.error(err);}
 }
@@ -275,11 +272,9 @@ async function loadData(){
   selectPeriod.innerHTML = month.map(p=>`<option value="${p}">Periode ${p}</option>`).join('');
   selectPeriod.onchange = e=>{
     const val = e.target.value;
-    state.month = val || months;
+    state.month = val || state.months;
     state.view = val ? state.data.filter(d=>d.month===val) : [...state.data];
-    datestamp.textContent = val
-      ? state.view.map(d=>d.date).filter(Boolean).pop() || times
-      : times;
+    datestamp.textContent=state.times;
     renderTable();
   };
   renderTable();
@@ -343,7 +338,7 @@ async function renderTable(){
 
 /* == autoOffcanvas == */
 function autoOffcanvas(){
-  const today = times;
+  const today = state.times;
   const found = state.data.find(d => d.date === today);
   if(!found) return false;
 
@@ -412,9 +407,9 @@ async function saveRow(){
       action : row.value ? 'set_row' : 'add_row',
       name : state.sheet,
       row  : row.value,
-      date : `'${date.value||times}`,
-      hour : `'${hour.value||hours}`,
-      month: `'${month.value||months}`,
+      date : `'${date.value||state.times}`,
+      hour : `'${hour.value||state.hours}`,
+      month: `'${month.value||state.months}`,
       work : work.checked,
       over : over.checked,
       pmss : pmss.checked,
@@ -430,9 +425,9 @@ async function saveRow(){
 
 function resetForm(){
   row.value='';
-  date.value=times;
-  hour.value=hours;
-  month.value=months;
+  date.value=state.times;
+  hour.value=state.hours;
+  month.value=state.months;
   work.checked=over.checked=pmss.checked=false;
   wages.value=pays.value=desc.value='';
   overs.classList.add('d-none');
@@ -501,10 +496,10 @@ function loadSheets(){
   const saved = localStorage.getItem(LOGIN_KEY);
   if(saved){
     doOpen(saved);
-    date.value=times;
-    hour.value=hours;
-    month.value=months;
-    datestamp.textContent=times;
+    date.value=state.times;
+    hour.value=state.hours;
+    month.value=state.months;
+    datestamp.textContent=state.times;
   }else{
     bootstrap.Offcanvas.getOrCreateInstance(formSheet).show();
   }
