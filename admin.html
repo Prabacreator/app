@@ -105,16 +105,15 @@ tfoot th,tfoot td{ border:none!important;}
       </div>
     </div>
   </div>
-  <!-- CLOSE-OUT -->
-  <div class="text-center">
-    <img class="ms-2 align-bottom h-100" style="width: 50px" onclick="closeBtn()" src="img/logout.svg"/>
-  </div>
 </div>
 
 <!-- == OFFCANVAS FORM DATA == -->
 <div class="offcanvas offcanvas-top w-100 h-100" tabindex="-1" id="formData">
   <div class="offcanvas-body d-flex justify-content-center flex-column">
-
+    <div class="text-end pe-2 mb-2">
+      <small class="text-danger">Keluar</small>
+      <img onclick="closeBtn()" src="img/logout.svg"/>
+    </div>
     <div class="card mb-2">
       <div class="card-header text-bg-info">
         <div class="d-flex justify-content-between mb-2">
@@ -174,7 +173,6 @@ tfoot th,tfoot td{ border:none!important;}
         <button class="btn btn-sm btn-light px-2 w-100" onclick="toggleFormSheet()"><img class="me-2" src="img/pencil.svg">Buat Data Baru</button>
       </div>
     </div>
-
   </div>
 </div>
 
@@ -182,6 +180,10 @@ tfoot th,tfoot td{ border:none!important;}
 <!-- == OFFCANVAS FORM SHEET == -->
 <div class="offcanvas offcanvas-top w-100 h-100" tabindex="-1" id="formSheet">
   <div class="offcanvas-body d-flex justify-content-center flex-column">
+    <div class="text-end pe-2 mb-2">
+      <small class="text-danger">Keluar</small>
+      <img onclick="closeBtn()" src="img/logout.svg"/>
+    </div>
     <div class="card">
       <div class="card-header text-center text-bg-info">
         <img src="img/person.svg"/>
