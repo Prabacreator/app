@@ -41,7 +41,7 @@ tfoot th,tfoot td{border:none!important;}
 </style>
 </head>
 
-<body class="bg-light-subtle py-5">
+<body class="bg-light-subtle">
 
 <!-- FLOAT BUTTON -->
 <div id="floatBtn" class="d-none"><img src="img/float.svg"></div>
@@ -234,23 +234,6 @@ const showLoading = ()=> Swal.fire({
 });
 const hideLoading = ()=> Swal.close();
 
-/* == LOAD SHEETS == */
-async function loadSheets(){
-  showLoading();
-  try{
-    const r = await fetch(url+'?'+new URLSearchParams({action:'getSheets'})).then(r=>r.json());
-    datestamp.textContent = times;
-    date.value = times;
-    hour.value=hours;
-    month.value = months;
-  }catch(err){
-    Swal.fire({icon:'error',text:err.message||err});
-  }finally{
-    hideLoading();
-    iniOpen();
-  }
-}
-
 let EMPLOYEES = [];
 let ACTIVE_EMP = null;
 
@@ -354,6 +337,7 @@ async function renderTable(){
       <th>${ttl('wages')}</th>
     </tr>
   </tfoot>`;
+  btn.classList.remove('d-none');
   hideLoading();
 }
 
@@ -456,16 +440,6 @@ function resetForm(){
 }
 
 /* == LOGIN & LOGOUT == */
-function openSaved(name){
-  localStorage.setItem(LOGIN_KEY, name);
-}
-function getSaved(){
-  return localStorage.getItem(LOGIN_KEY);
-}
-function clearClose(){
-  localStorage.removeItem(LOGIN_KEY);
-}
-
 async function openBtn(){
   const sheetName = $('openSheet').value.trim();
   if(!sheetName) return Swal.fire({icon:'warning',text:'Masukkan namamu'});
@@ -485,7 +459,7 @@ async function openBtn(){
       hideLoading();
       return Swal.fire({icon:'error',text:'Namamu tidak ditemukan'});
     }
-    openSaved(sheetName);
+    localStorage.setItem(LOGIN_KEY, sheetName);
     doOpen(sheetName);
   } catch(err) {
     hideLoading();
@@ -497,7 +471,6 @@ function doOpen(sheetName){
   state.sheet = sheetName;
   [user,userLogin].forEach(el=>el.textContent = sheetName);
   $('mainContainer').classList.remove('d-none');
-  btn.classList.remove('d-none');
   loadData();
   loadEmployee();
   hideLoading();
@@ -513,21 +486,25 @@ function closeBtn(){
     cancelButtonText:'Batal'
   }).then(res=>{
     if(!res.isConfirmed) return;
-    clearClose();
     state.sheet='';
     $('mainContainer').classList.add('d-none');
     btn.classList.add('d-none');
     $('openSheet').value='';
+    localStorage.removeItem(LOGIN_KEY);
     bootstrap.Offcanvas.getOrCreateInstance(formData).hide();
     bootstrap.Offcanvas.getOrCreateInstance(formSheet).show();
   });
 }
 
 /* == AUTO LOGIN SAAT REFRESH == */
-function iniOpen(){
-  const saved = getSaved();
+function loadSheets(){
+  const saved = localStorage.getItem(LOGIN_KEY);
   if(saved){
     doOpen(saved);
+    date.value=times;
+    hour.value=hours;
+    month.value=months;
+    datestamp.textContent=times;
   }else{
     bootstrap.Offcanvas.getOrCreateInstance(formSheet).show();
   }
