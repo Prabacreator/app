@@ -680,20 +680,16 @@ async function sharePDF(){
     return;
   }
 
-  if(!navigator.canShare){
-    Swal.fire({icon:'error',text:'Browser tidak mendukung share file'});
-    return;
-  }
-
   target.classList.remove('d-none');
   toggle.classList.add('d-none');
   showLoading();
 
   try{
     const canvas = await html2canvas(target,{
-      scale:2,
+      scale: window.devicePixelRatio || 2,
       useCORS:true,
-      backgroundColor:'#fff'
+      backgroundColor:'#fff',
+      logging:false
     });
 
     const pdf = new jspdf.jsPDF('p','mm','a4');
@@ -705,24 +701,29 @@ async function sharePDF(){
     const imgH = canvas.height * imgW / canvas.width;
 
     const x = (pageW - imgW) / 2;
-    const y = (pageH - imgH) / 2;
+    const y = 10;
 
     pdf.addImage(canvas, 'PNG', x, y, imgW, imgH);
 
-    const file = new File(
-      [pdf.output('blob')],
-      `${state.sheet}.pdf`,
-      { type:'application/pdf' }
-    );
+    const blob = pdf.output('blob');
 
-    await navigator.share({
-      title: state.sheet,
-      text: `Laporan ${state.sheet}`,
-      files: [file]
-    });
+    /* ===== WEBVIEW SAFE HANDLER ===== */
+    if(navigator.canShare && navigator.canShare({files:[new File([blob],'a.pdf',{type:'application/pdf'})]})){
+      const file = new File([blob], `${state.sheet}.pdf`, { type:'application/pdf' });
+      await navigator.share({
+        title: state.sheet,
+        text: `Laporan ${state.sheet}`,
+        files: [file]
+      });
+    }else{
+      // fallback WebView → buka PDF di tab baru
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      setTimeout(()=>URL.revokeObjectURL(url), 30000);
+    }
 
   }catch(err){
-    Swal.fire({icon:'error',title:'Gagal Share',text:err.message||err});
+    Swal.fire({icon:'error',title:'Gagal Export',text:err.message||err});
   }finally{
     target.classList.add('d-none');
     toggle.classList.remove('d-none');
