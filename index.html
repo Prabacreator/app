@@ -66,18 +66,16 @@ tfoot th,tfoot td{border:none!important;}
   <div class="table-responsive">
     <table id="table"></table>
   </div>
-  
-  <!-- CLOSE-OUT -->
-  <div class="text-center">
-    <img class="ms-2 align-bottom h-100" style="width: 50px" onclick="closeBtn()" src="img/logout.svg"/>
-  </div>
 </div>
 
 
 <!-- == OFFCANVAS FORM DATA == -->
 <div class="offcanvas offcanvas-start w-100 h-100" tabindex="-1" id="formData">
   <div class="offcanvas-body d-flex justify-content-center flex-column">
-
+    <div class="text-end pe-2 mb-2">
+      <small class="text-danger">Keluar</small>
+      <img onclick="closeBtn()" src="img/logout.svg"/>
+    </div>
     <div class="card mb-2">
       <div class="card-header text-center text-bg-info">
         <h2 id="user" class="fw-bold mb-0">Username</h2>
@@ -112,7 +110,7 @@ tfoot th,tfoot td{border:none!important;}
           <textarea id="desc" class="form-control" style="height:100px"></textarea>
         </div>
         
-        <div class="text-center py-3">
+        <div class="text-center py-3 w-50">
           <button id="add" class="btn btn-sm btn-success px-2 w-50" onclick="saveRow()"><i class="bi bi-floppy me-2"></i>Kirim</button>
         </div>
       </div>
