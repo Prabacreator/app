@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Job Activity</title>
+
+<!-- CSS -->
+<link href="css/bootstrap.min.css" rel="stylesheet">
+<link href="css/sweetalert.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+*,
+body{font-family: system-ui, -apple-system, "Segoe UI", sans-serif;}
+.container{max-width: 41em; overflow-x: auto; -webkit-overflow-scrolling: touch;}
+@media(min-width:768px){.container{max-width:420px}}
+.small{font-size:.75rem!important;margin:0!importan;padding:0!important;}
+.tiny{font-size:.55rem!important;margin:0!important;padding:0!important;}
+label,.btn,.fw-bold,.form-control{text-transform:capitalize!important}
+.btn{border-radius:17px!important}
+.border{border:.3px solid #000!important; border-radius:25px!important;}
+.form-select,.form-select:focus{box-shadow:none; border:none!important; --bs-border-color:transparent; --bs-focus-ring-color:transparent; background-color:transparent!important;}
+.bg-transparent{background-color:transparent!important}
+input[type=text],input[type=number]{border-radius:50px!important;}
+/* table */
+.table-responsive{justify-content:center!important; text-align:center!important; align-items:center!important;}
+table{width:100%; table-layout:auto; text-transform:capitalize; border-collapse:collapse;}
+table th,table td{font-size:.75rem; width:fit-content; white-space:nowrap; word-wrap:break-word; vertical-align:middle; font-family:var(--bs-font-monospace)!important; border:.2px solid #ccc;}
+tfoot th,tfoot td{border:none!important;}
+/* float button */
+#floatBtn{position:fixed; right:20px; bottom:20px; width:56px; height:56px; border-radius:50%; background:transparent!important; color:#fff; font-size:22px; display:flex; align-items:center; justify-content:center; cursor:grab; z-index:9999; box-shadow:0 .75rem 1.5rem rgba(0,0,0,.35); transition:left .25s ease, top .25s ease, transform .15s;}
+#floatBtn:active{cursor:grabbing; transform:scale(.92);}
+/* sweetalert2 css */
+.swal2-popup{padding: 1.5rem border-radius: 1rem; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;}
+.swal2-title{font-size: 1.25rem; font-weight: 700;}
+.swal2-html-container{ font-size: .95rem; color: #555;}
+.swal2-confirm{ color: var(--bs-dark); background: var(--bs-info); border-radius: 25px;  padding: .5rem 1.25rem;  font-weight: 600;}
+.swal2-cancel{ color: var(--bs-dark); background: var(--bs-info-bg-subtle); border-radius: 25px; padding: .5rem 1.25rem; font-weight: 600;}
+.swal2-icon{margin-top: .5rem;}
+</style>
+</head>
+
+<body class="bg-light-subtle">
+
+<!-- FLOAT BUTTON -->
+<div id="floatBtn" class="d-none"><img src="img/float.svg"></div>
+
+<div class="container py-2 d-none" id="mainContainer">
+  <!-- HEADER -->
+  <div class="d-flex justify-content-between px-2 border-bottom align-items-center">
+    <div class="fs-1 mt-3 fw-bold text-info" style="text-shadow:1px 4px 4px #000">
+      Job Activity
+    </div>
+    <div id="datestamp" class="mb-2 text-end"></div>
+  </div>
+
+  <!-- FILTER -->
+  <div class="my-2 d-flex gap-2 flex-column">
+    <div id="userLogin" class="fs-5 fw-bold ms-2"></div>
+    <select id="selectPeriod" class="form-select form-select-sm my-0"></select>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-responsive">
+    <table id="table"></table>
+  </div>
+</div>
+
+
+<!-- == OFFCANVAS FORM DATA == -->
+<div class="offcanvas offcanvas-start w-100 h-100" tabindex="-1" id="formData">
+  <div class="offcanvas-body d-flex justify-content-center flex-column">
+
+    <div class="card mb-2">
+      <div class="card-header text-center text-bg-info">
+        <h2 id="user" class="fw-bold mb-0">Username</h2>
+      </div>
+
+      <div class="card-body bg-info-subtle">
+        <!-- disembunyikan -->
+        <input type="hidden" id="row">
+        <input type="hidden" id="hour">
+        <input type="hidden" id="month">
+        <input type="hidden" id="wages">
+        <input type="hidden" id="pays">
+        
+        <input type="text" id="date" class="form-control form-control-sm text-center mb-2">
+      
+        <div class="form-group d-flex justify-content-between mb-2">
+          <div id="works" class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="work" onchange="updateWages()">
+            <label class="form-check-label">Bekerja</label>
+          </div>
+          <div id="overs" class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="over" onchange="updateWages()">
+            <label class="form-check-label">Overtime</label>
+          </div>
+          <div id="pmsss" class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="pmss" onchange="document.querySelector('.desc').classList.toggle('d-none')">
+            <label class="form-check-label">Izin/lapor</label>
+          </div>
+        </div>
+        <div class="form-group desc d-none">
+          <label class="form-label">Deskripsi</label>
+          <textarea id="desc" class="form-control" style="height:100px"></textarea>
+        </div>
+        
+        <div class="text-center py-3">
+          <button id="add" class="btn btn-sm btn-success px-2 w-50" onclick="saveRow()"><i class="bi bi-floppy me-2"></i>Kirim</button>
+        </div>
+        <div class="text-end">
+          <img class="ms-2" onclick="closeBtn()" src="img/logout.svg"/>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- == OFFCANVAS FORM LOGIN == -->
+<div class="offcanvas offcanvas-start w-100 h-100" tabindex="-1" id="formSheet">
+  <div class="offcanvas-body d-flex justify-content-center flex-column">
+    <div class="card text-center">
+      <div class="card-header text-center text-bg-info">
+        <img src="img/person.svg"/>
+      </div>
+      <div class="card-body bg-info-subtle">
+        <small>Nama lengkap</small>
+        <input type="text" id="openSheet" class="form-control text-center" oninput="this.value=this.value.replace(/\b\w/g,c=>c.toUpperCase())">
+        <div class="text-center mt-2">
+          <button class="btn btn-sm btn-primary px-3" onclick="openBtn()">Buka</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- JS -->
+<script src="js/bootstrap.bundle.min.js"></script>
+<script src="js/sweetalert.min.js"></script>
+<script src="js/html2canvas.min.js"></script>
+<script src="js/jspdf.umd.min.js"></script>
+
+<script>
+/* == FLOAT BUTTON == */
+const btn = document.getElementById('floatBtn');
+const KEY = 'floatBtnPos';
+let drag=false, ox=0, oy=0;
+
+const loadPos = ()=>{
+  const p = JSON.parse(localStorage.getItem(KEY));
+  if(p){
+    btn.style.left = p.x+'px';
+    btn.style.top  = p.y+'px';
+    btn.style.right = 'auto';
+    btn.style.bottom = 'auto';
+  }
+};
+
+const savePos = ()=>{
+  const r = btn.getBoundingClientRect();
+  localStorage.setItem(KEY, JSON.stringify({x:r.left,y:r.top}));
+};
+
+const start = e=>{
+  drag = true;
+  btn.style.transition='none';
+  const r = btn.getBoundingClientRect();
+  const x = e.touches ? e.touches[0].clientX : e.clientX;
+  const y = e.touches ? e.touches[0].clientY : e.clientY;
+  ox = x - r.left;
+  oy = y - r.top;
+};
+
+const move = e=>{
+  if(!drag) return;
+  e.preventDefault();
+  const x = e.touches ? e.touches[0].clientX : e.clientX;
+  const y = e.touches ? e.touches[0].clientY : e.clientY;
+  btn.style.left = (x-ox)+'px';
+  btn.style.top  = (y-oy)+'px';
+  btn.style.right='auto';
+  btn.style.bottom='auto';
+};
+
+const end = ()=>{
+  if(!drag) return;
+  drag=false;
+  const r = btn.getBoundingClientRect();
+  const vw = innerWidth, vh = innerHeight;
+  const x = r.left < vw/2 ? 10 : vw - r.width - 10;
+  const y = Math.max(10, Math.min(vh-r.height-10, r.top));
+  btn.style.transition='left .25s, top .25s';
+  btn.style.left = x+'px';
+  btn.style.top  = y+'px';
+  savePos();
+};
+
+btn.addEventListener('mousedown',start);
+document.addEventListener('mousemove',move);
+document.addEventListener('mouseup',end);
+btn.addEventListener('touchstart',start,{passive:false});
+document.addEventListener('touchmove',move,{passive:false});
+document.addEventListener('touchend',end);
+
+btn.addEventListener('click',()=>{
+  if(drag) return;
+  toggleOffCanvas();
+});
+
+/* == KONSTANTA & HELPER == */
+const url = 'https://script.google.com/macros/s/AKfycbyUS5u9eqEs4GmkZ18b-9mFwlm8-hg3mvFs5MAdONv7d0E-0rYy5RhfVrVuM-BcKBNIsQ/exec';
+const $ = id => document.getElementById(id);
+const isTrue = v => v===true || v==='TRUE' || v==='true' || v===1 || v==='1';
+
+const times  = new Date().toLocaleDateString('id-ID',{weekday:'long',day:'2-digit',month:'short',year:'numeric'});
+const hours = new Date().toLocaleString('id-ID', { hour: '2-digit',minute: '2-digit'});
+const months = new Date().toLocaleDateString('id-ID',{month:'long',year:'numeric'});
+
+/* == STATE == */
+const state = {sheet:'',month:'',data:[],view:[],};
+
+/* == STORAGE KEY == */
+const LOGIN_KEY = 'jobActivityLogin';
+
+/* == SWEETALERT LOADING == */
+const showLoading = ()=> Swal.fire({
+  title:'Loading...',
+  allowOutsideClick:false,
+  showConfirmButton:false,
+  didOpen:()=>Swal.showLoading()
+});
+const hideLoading = ()=> Swal.close();
+
+/* == LOAD SHEETS == */
+async function loadSheets(){
+  showLoading();
+  try{
+    const r = await fetch(url+'?'+new URLSearchParams({action:'getSheets'})).then(r=>r.json());
+    datestamp.textContent = times;
+    date.value = times;
+    hour.value=hours;
+    month.value = months;
+  }catch(err){
+    Swal.fire({icon:'error',text:err.message||err});
+  }finally{
+    hideLoading();
+    iniOpen();
+  }
+}
+
+let EMPLOYEES = [];
+let ACTIVE_EMP = null;
+
+async function loadEmployee() {
+  try {
+    const res = await fetch(url + '?' + new URLSearchParams({action: 'employee', name: state.sheet || ''}));
+    const r = await res.json();
+    EMPLOYEES = Array.isArray(r.data) ? r.data : [];
+    if (!EMPLOYEES.length) {wages.value = 0; return;}
+    ACTIVE_EMP = EMPLOYEES[0];
+    updateWages();
+  } catch (err) {console.error(err);}
+}
+
+/* == UPDATE WAGES LOGIC == */
+function updateWages() {
+  if (!ACTIVE_EMP) return;
+  const works= Number(ACTIVE_EMP.paywork) || 0;
+  const overs= Number(ACTIVE_EMP.payover) || 0;
+  if (!work.checked) {
+    wages.value = 0;
+  } else if (over.checked) {
+    wages.value = works + overs;
+  } else {
+    wages.value = works;
+  }
+}
+
+/* == LOAD DATA == */
+async function loadData(){
+  if(!state.sheet) return;
+  showLoading();
+  const r = await fetch(
+    url+'?'+new URLSearchParams({action:'getData',sheet:state.sheet})
+  ).then(r=>r.json());
+  state.data = Array.isArray(r.data) ? r.data : [];
+  state.view = [...state.data];
+  const month = [...new Set(state.data.map(d=>d.month).filter(Boolean))];
+  selectPeriod.innerHTML = month.map(p=>`<option value="${p}">Periode ${p}</option>`).join('');
+  selectPeriod.onchange = e=>{
+    const val = e.target.value;
+    state.month = val || months;
+    state.view = val ? state.data.filter(d=>d.month===val) : [...state.data];
+    datestamp.textContent = val
+      ? state.view.map(d=>d.date).filter(Boolean).pop() || times
+      : times;
+    renderTable();
+  };
+  renderTable();
+  toggleOffCanvas();
+}
+
+/* == RENDER TABLE == */
+async function renderTable(){
+  table.innerHTML = '';
+  if(!state.view.length){
+    hideLoading();
+    const c = await Swal.fire({icon:'warning',text:'Data kosong, silakan input data'});
+    if(c.isConfirmed){
+      bootstrap.Offcanvas.getOrCreateInstance(formData).show();
+    }
+    return;
+  }
+  const jml = j => state.view.filter(a => a?.[j] && isTrue(a[j])).length;
+  const ttl = k => state.view.reduce((s,a)=>s+(+a[k]||0),0);
+  
+  table.innerHTML = `
+  <thead>
+    <tr class="text-center">
+      <th rowspan="2">No</th>
+      <th rowspan="2">Tanggal</th>
+      <th colspan="3">ABSENSI</th>
+      <th rowspan="2">Upah<br>Harian</th>
+    </tr>
+    <tr class="text-center">
+      <th class="tiny">Kerja</th>
+      <th class="tiny">Lembur</th>
+      <th class="tiny">Izin</th>
+    </tr>
+  </thead><tbody class="text-center">
+  ${state.view.map((a,i)=>{
+    const hasDesc = a.desc && a.desc.trim();
+    return `
+    <tr>
+      <th rowspan="${hasDesc?2:1}">${i+1}</th>
+      <td class="small text-start ps-1">${a.date||'-'} [${a.hour||'-'}]</td>
+      <td>${isTrue(a.work)?'✔':''}</td>
+      <td>${isTrue(a.over)?'✔':''}</td>
+      <td>${isTrue(a.pmss)?'✔':''}</td>
+      <td class="text-end pe-2">${a.wages||''}</td>
+    </tr>${hasDesc ? `<tr>
+      <th colspan="5"><i>${a.desc}</i></th>
+    </tr>` : ``}`;
+  }).join('')}
+  </tbody><tfoot class="text-center">
+    <tr>
+      <th colspan="2"></th>
+      <th>${jml('work')}</th>
+      <th>${jml('over')}</th>
+      <th>${jml('pmss')}</th>
+      <th>${ttl('wages')}</th>
+    </tr>
+  </tfoot>`;
+  hideLoading();
+}
+
+/* == autoOffcanvas == */
+function autoOffcanvas(){
+  const today = times;
+  const found = state.data.find(d => d.date === today);
+  if(!found) return false;
+
+  if(isTrue(found.pmss)){
+    Swal.fire({
+      icon:'info',
+      title: state.sheet,
+      text:'Hari ini Anda izin, tidak bekerja',
+      showConfirmButton:false
+    });
+    return true;
+  }
+
+  if(isTrue(found.work) && isTrue(found.over)){
+    Swal.fire({
+      icon:'success',
+      title: state.sheet,
+      text:'Anda telah absen bekerja dan lembur',
+      showConfirmButton:false
+    });
+    return true;
+  }
+
+  const i = state.data.indexOf(found);
+  Object.keys(found).forEach(k=>{
+    const el = $(k);
+    if(!el) return;
+    el.type==='checkbox' ? el.checked=isTrue(found[k]) : el.value=found[k];
+  });
+
+  [works,pmsss].forEach(el=> el.classList.add('d-none'));
+  overs.classList.remove('d-none');
+  row.value = i + 2;
+  bootstrap.Offcanvas.getOrCreateInstance(formData).toggle();
+  bootstrap.Offcanvas.getOrCreateInstance(formSheet).hide();
+  return true;
+}
+
+function toggleOffCanvas(){
+  resetForm();
+  if(!state.sheet){
+    bootstrap.Offcanvas.getOrCreateInstance(formSheet).show();
+    bootstrap.Offcanvas.getOrCreateInstance(formData).hide();
+  }else{
+    if(!autoOffcanvas()){
+      [works,pmsss].forEach(el=> el.classList.remove('d-none'));
+      bootstrap.Offcanvas.getOrCreateInstance(formData).toggle();
+      bootstrap.Offcanvas.getOrCreateInstance(formSheet).hide();
+    }
+  }
+}
+
+async function editRow(i){
+  const d = state.view[i];
+  const real = state.data.indexOf(d);
+  Object.keys(d).forEach(k=>{const el = $(k); if(!el) return; el.type==='checkbox' ? el.checked=isTrue(d[k]) : el.value=d[k];});
+  row.value = real + 2;
+  bootstrap.Offcanvas.getOrCreateInstance(formData).show();
+}
+
+async function saveRow(){
+  bootstrap.Offcanvas.getOrCreateInstance(formData).hide();
+  const r = await fetch(url,{
+    method:'POST',
+    body:new URLSearchParams({
+      action : row.value ? 'set_row' : 'add_row',
+      name : state.sheet,
+      row  : row.value,
+      date : `'${date.value||times}`,
+      hour : `'${hour.value||hours}`,
+      month: `'${month.value||months}`,
+      work : work.checked,
+      over : over.checked,
+      pmss : pmss.checked,
+      wages: wages.value,
+      pays : pays.value,
+      desc : desc.value
+    })
+  }).then(r=>r.json());
+  Swal.fire({icon:r.status?'success':'error',text:r.msg||'Selesai'});
+  resetForm();
+  loadData();
+}
+
+function resetForm(){
+  row.value='';
+  date.value=times;
+  hour.value=hours;
+  month.value=months;
+  work.checked=over.checked=pmss.checked=false;
+  wages.value=pays.value=desc.value='';
+  overs.classList.add('d-none');
+  updateWages();
+}
+
+/* == LOGIN & LOGOUT == */
+function openSaved(name){
+  localStorage.setItem(LOGIN_KEY, name);
+}
+function getSaved(){
+  return localStorage.getItem(LOGIN_KEY);
+}
+function clearClose(){
+  localStorage.removeItem(LOGIN_KEY);
+}
+
+async function openBtn(){
+  const sheetName = $('openSheet').value.trim();
+  if(!sheetName) return Swal.fire({icon:'warning',text:'Masukkan namamu'});
+
+  // ✅ Jika admin → buka index2.html
+  if(sheetName.toLowerCase() === 'admin'){
+    window.location.href = 'admin.html';
+    return;
+  }
+
+  showLoading();
+  try {
+    const res = await fetch(url+'?'+new URLSearchParams({action:'getSheets'}));
+    const r = await res.json();
+    const sheets = Array.isArray(r.data) ? r.data : [];
+    if(!sheets.includes(sheetName)) {
+      hideLoading();
+      return Swal.fire({icon:'error',text:'Namamu tidak ditemukan'});
+    }
+    openSaved(sheetName);
+    doOpen(sheetName);
+  } catch(err) {
+    hideLoading();
+    Swal.fire({icon:'error',text:err.message||err});
+  }
+}
+
+function doOpen(sheetName){
+  state.sheet = sheetName;
+  [user,userLogin].forEach(el=>el.textContent = sheetName);
+  $('mainContainer').classList.remove('d-none');
+  btn.classList.remove('d-none');
+  loadData();
+  loadEmployee();
+  hideLoading();
+  bootstrap.Offcanvas.getOrCreateInstance(formSheet).hide();
+}
+
+function closeBtn(){
+  Swal.fire({
+    text:'Yakin Anda mau Logout ?',
+    icon:'question',
+    showCancelButton:true,
+    confirmButtonText:'Ya, Logout',
+    cancelButtonText:'Batal'
+  }).then(res=>{
+    if(!res.isConfirmed) return;
+    clearClose();
+    state.sheet='';
+    $('mainContainer').classList.add('d-none');
+    btn.classList.add('d-none');
+    $('openSheet').value='';
+    bootstrap.Offcanvas.getOrCreateInstance(formData).hide();
+    bootstrap.Offcanvas.getOrCreateInstance(formSheet).show();
+  });
+}
+
+/* == AUTO LOGIN SAAT REFRESH == */
+function iniOpen(){
+  const saved = getSaved();
+  if(saved){
+    doOpen(saved);
+  }else{
+    bootstrap.Offcanvas.getOrCreateInstance(formSheet).show();
+  }
+}
+
+/* == INIT == */
+document.addEventListener('DOMContentLoaded',loadSheets);
+</script>
+
+</body>
+</html>

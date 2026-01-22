@@ -1,0 +1,738 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Job Activity</title>
+
+<!-- CSS -->
+<link href="css/bootstrap.min.css" rel="stylesheet">
+<link href="css/sweetalert.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+*,body{font-family: system-ui, -apple-system, "Segoe UI", sans-serif;}
+
+.container{max-width: 41em; overflow-x: auto; -webkit-overflow-scrolling: touch;}
+
+@media(min-width:768px){.container{max-width:420px}}
+
+.small{font-size:.75rem!important}
+.tiny{font-size:.55rem!important}
+
+a{text-decoration:none!important}
+
+.btn{border-radius:17px!important}
+.border{border:.3px solid #000!important;border-radius:25px!important;}
+.border-bottom{border-bottom:.3px solid #ccc!important;}
+.bg-transparent{background-color:transparent!important}
+
+/*form css*/
+label,.btn,.fw-bold,.form-control{text-transform:capitalize!important}
+.form-select,.form-select:focus{ box-shadow:none; border:none!important; --bs-border-color:transparent; --bs-focus-ring-color:transparent; background-color:transparent!important;}
+.form-control{ border:.3px solid #000!important; background-color:transparent!important; font-size:1.1rem!important;}
+input[type=text],input[type=number]{ border-radius:50px!important;}
+input[type=number]{font-weight:bold;text-align:center;}
+
+/*table css*/
+.table-responsive{justify-content:center!important;text-align:center!important;align-items:center!important;}
+table{width:100%; table-layout:auto; text-transform:capitalize; border-collapse:collapse;}
+table th,table td{font-size:.75rem; width:fit-content; white-space:nowrap; word-wrap:break-word; vertical-align:middle; font-family:var(--bs-font-monospace)!important; border:.25px solid #000;}
+tfoot th,tfoot td{ border:none!important;}
+
+/* float button */
+#floatBtn{position:fixed; right:20px; bottom:20px; width:56px; height:56px; border-radius:50%; background:transparent!important; color:#fff; font-size:22px; display:flex; align-items:center; justify-content:center; cursor:grab; z-index:9999; box-shadow:0 .75rem 1.5rem rgba(0,0,0,.35); transition:left .25s ease, top .25s ease, transform .15s;}
+#floatBtn:active{cursor:grabbing; transform:scale(.92);}
+
+/* sweetalert2 css */
+.swal2-popup{padding: 1.5rem border-radius: 1rem; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;}
+.swal2-title{font-size: 1.25rem; font-weight: 700;}
+.swal2-html-container{ font-size: .95rem; color: #555;}
+.swal2-confirm{ color: var(--bs-dark); background: var(--bs-info); border-radius: 25px;  padding: .5rem 1.25rem;  font-weight: 600;}
+.swal2-cancel{ color: var(--bs-dark); background: var(--bs-info-bg-subtle); border-radius: 25px; padding: .5rem 1.25rem; font-weight: 600;}
+.swal2-icon{margin-top: .5rem;}
+</style>
+</head>
+
+<body class="bg-light-subtle">
+
+<!-- FLOAT BUTTON -->
+<div id="floatBtn"><img src="img/float.svg"></div>
+
+<div class="container py-2">
+
+  <!-- HEADER -->
+  <div class="d-flex justify-content-between px-2 border-bottom">
+    <div class="fs-1 mt-3 fw-bold text-info" style="text-shadow:1px 4px 4px #000">
+      Job Activity
+    </div>
+    <div class="mb-3">
+      <div id="datestamp1" class="mb-3"></div>
+    </div>
+  </div>
+
+  <!-- FILTER -->
+  <div class="my-2">
+    <select id="sheetSelect" class="form-select form-select-sm fs-6 fw-bold my-0"></select>
+    <select id="selectPeriod" class="form-select form-select-sm my-0"></select>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-responsive">
+    <table id="table"></table>
+  </div>
+  
+  <!-- share file -->
+  <div id="filePDF" class="card mx-3 d-none">
+    <div class="card-header text-bg-success d-flex justify-content-between">
+      <h2 class="fw-bold mt-3">Invoice</h2>
+      <small id="datestamp2" class="small mb-3"></small>
+    </div>
+    <div class="card-body bg-success-subtle">
+      <table><tfoot>
+        <tr><th colspan="2">Nama lengkap</th><th colspan="2" id="nme"></th></tr>
+        <tr><th colspan="2">Departement/Division</th><th colspan="2" id="dvs"></th></tr>
+        <tr><th colspan="4">Upah/jasa</th></tr>
+        <tr><th>-</th><td>Harian</td><th>: Rp</th><th class="text-end" id="wrk"></th></tr>
+        <tr><th>-</th><td>Lembur</td><th>: Rp</th><th class="text-end" id="ovr"></th></tr>
+        <tr><th colspan="4">Absensi</th></tr>
+        <tr><th>-</th><td>Kerja</td><th>:</th><th class="text-end" id="wrks"></th></tr>
+        <tr><th>-</th><td>Lembur</td><th>:</th><th class="text-end" id="ovrs"></th></tr>
+        <tr><th>-</th><td>Izin</td><th>:</th><th class="text-end" id="xpms"></th></tr>
+        <tr><th colspan="2">Total Upah/jasa</td><th>: Rp</th><th class="text-end" id="xwgs"></th></tr>
+      </tfoot></table>
+    </div>
+  </div>
+  
+</div>
+
+
+<!-- == OFFCANVAS FORM DATA == -->
+<div class="offcanvas offcanvas-top w-100 h-100" tabindex="-1" id="formData">
+  <div class="offcanvas-body d-flex justify-content-center flex-column">
+
+    <div class="card mb-2">
+      <div class="card-header text-bg-info">
+        <div class="d-flex justify-content-between mb-2">
+          <h5><img class="me-2" src="img/pencil.svg"/>Input Data</h5>
+          <p>Share<img class="ms-2" onclick="sharePDF()" src="img/share.svg"/></p>
+        </div>
+
+        <div class="d-flex justify-content-between border p-1">
+          <img onclick="delSheet()" class="ms-2" src="img/trash.svg"/>
+          <div id="user" class="me-2" onclick="unlockSheet()" style="cursor:pointer"></div>
+        </div>
+      </div>
+
+      <div class="card-body bg-info-subtle">
+        <!--disembunyikan-->
+        <input type="hidden" id="row">
+        <input type="hidden" id="hour">
+        <input type="hidden" id="month">
+
+        <input type="text" id="date" class="form-control form-control-sm text-center mb-2">
+
+        <div class="form-group mb-2">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="work" onchange="updateWages()">
+            <label class="form-check-label">Kerja</label>
+          </div>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="over" onchange="updateWages()">
+            <label class="form-check-label">Lembur</label>
+          </div>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="pmss" onchange="document.querySelector('.desc').classList.toggle('d-none')">
+            <label class="form-check-label">Izin</label>
+          </div>
+        </div>
+        <div class="form-group d-flex justify-content-between mb-1">
+          <label class="form-label">Upah/jasa</label>
+          <input type="number" id="wages" class="form-control form-control-sm w-50">
+        </div>
+        <div class="form-group d-flex justify-content-between mb-1">
+          <label class="form-label">Dibayar</label>
+          <input type="number" id="pays" class="form-control form-control-sm w-50">
+        </div>
+        <div class="form-group desc d-none">
+          <label class="form-label">Deskripsi</label>
+          <textarea id="desc" class="form-control" style="height:100px"></textarea>
+        </div>
+        
+        <div class="d-flex justify-content-between mt-3">
+          <img id="del" onclick="delRow()" class="ms-2" src="img/trash.svg"/>
+          <img onclick="resetForm()" class="ms-2" src="img/reset.svg"/>
+          <button id="add" class="btn btn-sm btn-success px-2 w-50" onclick="saveRow()"><img class="me-2" src="img/save.svg"/>Simpan</button>
+        </div>
+      </div>
+
+      <div class="card-footer bg-dark-subtle py-3">
+        <button class="btn btn-sm btn-light px-2 w-100" onclick="toggleFormSheet()"><img class="me-2" src="img/pencil.svg">Buat Data Baru</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- == OFFCANVAS FORM SHEET == -->
+<div class="offcanvas offcanvas-top w-100 h-100" tabindex="-1" id="formSheet">
+  <div class="offcanvas-body d-flex justify-content-center flex-column">
+    <div class="card">
+      <div class="card-header text-center text-bg-info">
+        <img src="img/person.svg"/>
+      </div>
+      <div class="card-body bg-info-subtle">
+        <div class="form-group d-flex justify-content-between mb-1">
+          <label class="form-label fw-bold">Nama Lengkap</label>
+          <input type="text" id="username" class="form-control text-start w-50"
+            oninput="this.value=this.value.replace(/\b\w/g,c=>c.toUpperCase())">
+        </div>
+        <div class="form-group d-flex justify-content-between mb-1">
+          <label class="form-label fw-bold">Divisi/Departement</label>
+          <input type="text" id="divisi" class="form-control text-start w-50"
+            oninput="this.value=this.value.replace(/\b\w/g,c=>c.toUpperCase())">
+        </div>
+        <label class="form-label fw-bold">Upah/jasa</label>
+        <div class="form-group d-flex justify-content-between mb-1">
+          <div class="mx-1">
+            <label class="form-label">Harian</label>
+            <input type="number" id="paywork" class="form-control form-control-sm">
+          </div>
+          <div class="mx-1">
+            <label class="form-label">Lembur</label>
+            <input type="number" id="payover" class="form-control form-control-sm">
+          </div>
+        </div>
+        <div class="text-center mt-3">
+          <button class="btn btn-sm btn-primary px-3" onclick="addSheet()">
+            <img src="img/save.svg" class="me-2">Simpan
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- JS -->
+<script src="js/bootstrap.bundle.min.js"></script>
+<script src="js/sweetalert.min.js"></script>
+<script src="js/html2canvas.min.js"></script>
+<script src="js/jspdf.umd.min.js"></script>
+
+<script>
+/* == FLOAT BUTTON == */
+const btn = document.getElementById('floatBtn');
+const KEY = 'floatBtnPos';
+let drag=false, ox=0, oy=0;
+
+const loadPos = ()=>{
+  const p = JSON.parse(localStorage.getItem(KEY));
+  if(p){
+    btn.style.left = p.x+'px';
+    btn.style.top  = p.y+'px';
+    btn.style.right = 'auto';
+    btn.style.bottom = 'auto';
+  }
+};
+
+const savePos = ()=>{
+  const r = btn.getBoundingClientRect();
+  localStorage.setItem(KEY, JSON.stringify({x:r.left,y:r.top}));
+};
+
+const start = e=>{
+  drag = true;
+  btn.style.transition='none';
+  const r = btn.getBoundingClientRect();
+  const x = e.touches ? e.touches[0].clientX : e.clientX;
+  const y = e.touches ? e.touches[0].clientY : e.clientY;
+  ox = x - r.left;
+  oy = y - r.top;
+};
+
+const move = e=>{
+  if(!drag) return;
+  e.preventDefault();
+  const x = e.touches ? e.touches[0].clientX : e.clientX;
+  const y = e.touches ? e.touches[0].clientY : e.clientY;
+  btn.style.left = (x-ox)+'px';
+  btn.style.top  = (y-oy)+'px';
+  btn.style.right='auto';
+  btn.style.bottom='auto';
+};
+
+const end = ()=>{
+  if(!drag) return;
+  drag=false;
+  const r = btn.getBoundingClientRect();
+  const vw = innerWidth, vh = innerHeight;
+  const x = r.left < vw/2 ? 10 : vw - r.width - 10;
+  const y = Math.max(10, Math.min(vh-r.height-10, r.top));
+  btn.style.transition='left .25s, top .25s';
+  btn.style.left = x+'px';
+  btn.style.top  = y+'px';
+  savePos();
+};
+
+btn.addEventListener('mousedown',start);
+document.addEventListener('mousemove',move);
+document.addEventListener('mouseup',end);
+btn.addEventListener('touchstart',start,{passive:false});
+document.addEventListener('touchmove',move,{passive:false});
+document.addEventListener('touchend',end);
+
+btn.addEventListener('click',()=>{
+  if(drag) return;
+  toggleOffCanvas();
+});
+
+/* == KONSTANTA & HELPER == */
+const url = 'https://script.google.com/macros/s/AKfycbyUS5u9eqEs4GmkZ18b-9mFwlm8-hg3mvFs5MAdONv7d0E-0rYy5RhfVrVuM-BcKBNIsQ/exec';
+const $ = id => document.getElementById(id);
+const isTrue = v => v===true || v==='TRUE' || v==='true' || v===1 || v==='1';
+
+const times  = new Date().toLocaleDateString('id-ID',{weekday:'long',day:'2-digit',month:'short',year:'numeric'});
+const hours = new Date().toLocaleString('id-ID', { hour: '2-digit',minute: '2-digit'});
+const months = new Date().toLocaleDateString('id-ID',{month:'long',year:'numeric'});
+
+/* == STATE == */
+const state = {
+  sheet:'',
+  month:'',
+  data:[],
+  view:[],
+  locked:false
+};
+
+/* == UTIL == */
+function unlockSheet(){
+  state.locked = !state.locked;
+  user.textContent = state.locked ? `🔒 ${state.sheet}` : state.sheet;
+  Swal.fire({icon:'success',text: state.locked ? 'Data dikunci' : 'Data dibuka'});
+}
+
+/* == SWEETALERT LOADING == */
+const showLoading = ()=> Swal.fire({
+  title:'Loading...',
+  allowOutsideClick:false,
+  showConfirmButton:false,
+  didOpen:()=>Swal.showLoading()
+});
+const hideLoading = ()=> Swal.close();
+
+/* == LOAD SHEETS == */
+async function loadSheets(){
+  showLoading();
+  try{
+    const r = await fetch(url+'?'+new URLSearchParams({action:'getSheets'})).then(r=>r.json());
+
+    if(!r.data || !r.data.length){
+      hideLoading();
+      const c = await Swal.fire({icon:'warning',text:'Data kosong, silakan input data'});
+      if(c.isConfirmed){
+        bootstrap.Offcanvas.getOrCreateInstance(formSheet).show();
+      }
+      return;
+    }
+
+    sheetSelect.innerHTML =
+      `<option val="">Pilih</option>` +
+      r.data.map(v=>`<option value="${v}">${v}</option>`).join('');
+
+    sheetSelect.onchange = async ()=>{
+      if(state.sheet && state.locked){
+        const c = await Swal.fire({
+          icon:'question',
+          text:'Anda akan beralih data?',
+          showCancelButton:true
+        });
+        if(!c.isConfirmed){
+          sheetSelect.value = state.sheet;
+          return;
+        }
+      }
+      state.sheet = sheetSelect.value;
+      state.month = '';
+      state.locked = true;
+      user.textContent = `🔒 ${state.sheet}`;
+      loadEmployee();
+      loadData();
+    };
+
+    [datestamp1,datestamp2].forEach(el=>el.textContent = times);
+    date.value = times;
+    hour.value=hours;
+    month.value = months;
+  }catch(err){
+    Swal.fire({icon:'error',text:err.message||err});
+  }finally{
+    hideLoading();
+  }
+}
+
+/* == LOAD DATA EMPLOYEE == */
+let EMPLOYEES = [];
+let ACTIVE_EMP = null;
+
+async function loadEmployee() {
+  try {
+    const res = await fetch(url + '?' + new URLSearchParams({
+      action: 'employee',
+      name: state.sheet || ''
+    }));
+    const r = await res.json();
+    EMPLOYEES = Array.isArray(r.data) ? r.data : [];
+
+    if (!EMPLOYEES.length) {
+      wages.value = 0;
+      return;
+    }
+    //isi Invoice
+    EMPLOYEES.map(e=>{
+      nme.textContent= ': '+e.name;
+      dvs.textContent= ': '+e.divisi;
+      wrk.textContent= e.paywork+',00';
+      ovr.textContent= e.payover+',00';
+    }).join('');
+    
+    
+    // otomatis pakai employee pertama
+    ACTIVE_EMP = EMPLOYEES[0];
+    updateWages();
+
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+/* == UPDATE WAGES LOGIC == */
+function updateWages() {
+  if (!ACTIVE_EMP) return;
+
+  const works = Number(ACTIVE_EMP.paywork) || 0;
+  const overs = Number(ACTIVE_EMP.payover) || 0;
+
+  if (!work.checked) {
+    wages.value = 0;
+  } else if (over.checked) {
+    wages.value = works + overs;
+  } else {
+    wages.value = works;
+  }
+}
+/* == LOAD DATA == */
+async function loadData(){
+  if(!state.sheet) return;
+  showLoading();
+
+  const r = await fetch(
+    url+'?'+new URLSearchParams({action:'getData',sheet:state.sheet})
+  ).then(r=>r.json());
+
+  state.data = Array.isArray(r.data) ? r.data : [];
+  state.view = [...state.data];
+
+  const month = [...new Set(state.data.map(d=>d.month).filter(Boolean))];
+
+  selectPeriod.innerHTML = month.map(p=>`<option value="${p}">Periode ${p}</option>`).join('');
+
+  selectPeriod.onchange = e=>{
+    const val = e.target.value;
+    state.month = val || months;
+    state.view = val ? state.data.filter(d=>d.month===val) : [...state.data];
+
+    datestamp.textContent = val
+      ? state.view.map(d=>d.date).filter(Boolean).pop() || times
+      : times;
+    renderTable();
+  };
+  renderTable();
+}
+
+/* == RENDER TABLE == */
+async function renderTable(){
+  table.innerHTML = '';
+  if(!state.view.length){
+    hideLoading();
+    const c = await Swal.fire({icon:'warning',text:'Data kosong, silakan input data'});
+    if(c.isConfirmed){
+      bootstrap.Offcanvas.getOrCreateInstance(formData).show();
+    }
+    return;
+  }
+  const jml = j => state.view.filter(a => a?.[j] && isTrue(a[j])).length;
+  const ttl = k => state.view.reduce((s,a)=>s+(+a[k]||0),0);
+  const saldo = ttl('wages') - (ttl('debt') + ttl('pays'));
+  wrks.textContent= jml('work')+' hari';
+  ovrs.textContent= jml('over')+' hari';
+  xpms.textContent= jml('pmss')+' hari';
+  xwgs.textContent= saldo!==0? Math.abs(saldo)+',00' : 'LUNAS !';
+  table.innerHTML = `
+  <thead class="bg-success-subtle">
+    <tr class="text-center">
+      <th rowspan="2">No</th>
+      <th rowspan="2">Tanggal</th>
+      <th colspan="3">Absensi</th>
+      <th colspan="2">Upah/gaji</th>
+    </tr>
+    <tr class="text-center">
+      <th class="tiny px-1">Kerja</th>
+      <th class="tiny px-1">Lembur</th>
+      <th class="tiny px-1">Izin</th>
+      <th class="tiny px-2">Harian</th>
+      <th class="tiny px-2">Dibayar</th>
+    </tr>
+  </thead><tbody class="text-center">
+    ${state.view.map((a,i)=>{
+      const hasDesc = a.desc && a.desc.trim();
+      return `
+      <tr onclick="editRow(${i})" style="cursor:pointer">
+        <th rowspan="${hasDesc?2:1}">${i+1}</th>
+        <td class="text-start px-2">${a.date||'-'} [${a.hour||'-'}]</td>
+        <td>${isTrue(a.work)?'✔':''}</td>
+        <td>${isTrue(a.over)?'✔':''}</td>
+        <td>${isTrue(a.pmss)?'✔':''}</td>
+        <td>${a.wages||''}</td>
+        <td>${a.pays||''}</td>
+      </tr>${hasDesc ? `<tr>
+        <th colspan="3" class="tiny text-start ps-2"><i>${a.desc}</i></th>
+      </tr>` : ``}`;}).join('')}
+  </tbody><tfoot class="text-center px-2">
+    <tr>
+      <th colspan="2"></th>
+      <th>${jml('work')}</th>
+      <th>${jml('over')}</th>
+      <th>${jml('pmss')}</th>
+      <th>${ttl('wages')}</th>
+      <th>${ttl('pays')}</th>
+    </tr>
+  </tfoot>
+  `;
+  hideLoading();
+}
+
+/* == CRUD ROW == */
+function toggleOffCanvas(){
+  resetForm();
+  if(!state.sheet){
+    bootstrap.Offcanvas.getOrCreateInstance(formSheet).toggle();
+    bootstrap.Offcanvas.getOrCreateInstance(formData).hide();
+  }else{
+    bootstrap.Offcanvas.getOrCreateInstance(formData).toggle();
+  }
+}
+
+function toggleFormSheet(){
+  state.sheet = '';
+  table.innerHTML = '';
+  loadSheets();
+  bootstrap.Offcanvas.getOrCreateInstance(formSheet).show();
+  bootstrap.Offcanvas.getOrCreateInstance(formData).hide();
+  resetForm();
+}
+
+async function editRow(i){
+  const d = state.view[i];
+  const real = state.data.indexOf(d);
+
+  Object.keys(d).forEach(k=>{
+    const el = $(k);
+    if(!el) return;
+    el.type==='checkbox' ? el.checked=isTrue(d[k]) : el.value=d[k];
+  });
+
+  row.value = real + 2;
+  add.innerHTML = 'Update';
+  del.classList.remove('d-none');
+  bootstrap.Offcanvas.getOrCreateInstance(formData).show();
+}
+
+async function saveRow(){
+  bootstrap.Offcanvas.getOrCreateInstance(formData).hide();
+
+  const r = await fetch(url,{
+    method:'POST',
+    body:new URLSearchParams({
+      action : row.value ? 'set_row' : 'add_row',
+      name : state.sheet,
+      row  : row.value,
+      date : `'${date.value||times}`,
+      hour : `'${hour.value||hours}`,
+      month: `'${month.value||months}`,
+      work : work.checked,
+      over : over.checked,
+      pmss : pmss.checked,
+      wages: wages.value,
+      pays : pays.value,
+      desc : desc.value
+    })
+  }).then(r=>r.json());
+
+  Swal.fire({icon:r.status?'success':'error',text:r.msg||'Selesai'});
+  resetForm();
+  loadData();
+}
+
+async function delRow(){
+  if(!row.value) return Swal.fire({icon:'warning',text:'Data belum dipilih'});
+  const c = await Swal.fire({icon:'warning',title:'Hapus baris?',showCancelButton:true});
+  if(!c.isConfirmed) return;
+
+  bootstrap.Offcanvas.getOrCreateInstance(formData).hide();
+  await fetch(url,{
+    method:'POST',
+    body:new URLSearchParams({action:'del_row',name:state.sheet,row:row.value})
+  });
+  resetForm();
+  loadData();
+}
+
+function resetForm(){
+  row.value='';
+  date.value=times;
+  hour.value=hours;
+  month.value=months;
+  work.checked=over.checked=pmss.checked=false;
+  pays.value=desc.value='';
+  del.classList.add('d-none');
+  updateWages();
+}
+
+/* == CRUD SHEET == */
+async function addSheet() {
+  const name = username.value.trim();
+  const worksVal = paywork.value.trim();
+  const oversVal = payover.value.trim();
+
+  if (!name || !worksVal || !oversVal) {
+    return Swal.fire({ icon: 'warning', text: 'Data belum diisi lengkap' });
+  }
+
+  const employee = {
+    action: 'add_sheet',
+    name,
+    paywork: worksVal,
+    payover: oversVal
+  };
+
+  bootstrap.Offcanvas.getOrCreateInstance(formSheet).hide();
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      body: new URLSearchParams(employee)
+    });
+
+    const json = await res.json();
+    if (json.status !== 'ok' && json.status !== 'info') {
+      throw json.message || 'Gagal membuat sheet';
+    }
+
+    state.sheet = name;
+    state.locked = true;
+    user.textContent = `🔒 ${name}`;
+    bootstrap.Offcanvas.getOrCreateInstance(formData).show();
+    loadSheets();
+    loadEmployee();
+
+  } catch (err) {
+    Swal.fire({ icon: 'error', text: err.toString() });
+  }
+}
+
+async function delSheet(){
+  if(state.locked) return Swal.fire({icon:'warning',text:'Data terkunci, silakan buka kunci dulu'});
+  if(!state.sheet) return;
+
+  const c = await Swal.fire({
+    icon:'warning',
+    title:state.sheet,
+    text:'Yakin mau hapus data ini?',
+    showCancelButton:true
+  });
+  if(!c.isConfirmed) return;
+
+  bootstrap.Offcanvas.getOrCreateInstance(formData).hide();
+  await fetch(url,{
+    method:'POST',
+    body:new URLSearchParams({action:'del_sheet',name:state.sheet})
+  });
+
+  state.sheet='';
+  state.locked=false;
+  table.innerHTML='';
+  loadSheets();
+}
+
+/* == SHARE PDF == */
+async function sharePDF(){
+  const off = bootstrap.Offcanvas.getOrCreateInstance(formData);
+  const toggle = $('floatBtn');
+  const target = document.querySelector('#filePDF');
+
+  off.hide();
+
+  if(!target || !target.innerHTML.trim()){
+    Swal.fire({icon:'warning',text:'Data belum ditampilkan'});
+    return;
+  }
+
+  if(!navigator.canShare){
+    Swal.fire({icon:'error',text:'Browser tidak mendukung share file'});
+    return;
+  }
+
+  target.classList.remove('d-none');
+  toggle.classList.add('d-none');
+  showLoading();
+
+  try{
+    const canvas = await html2canvas(target,{
+      scale:2,
+      useCORS:true,
+      backgroundColor:'#fff'
+    });
+
+    const pdf = new jspdf.jsPDF('p','mm','a4');
+
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+
+    const imgW = pageW - 20;
+    const imgH = canvas.height * imgW / canvas.width;
+
+    const x = (pageW - imgW) / 2;
+    const y = (pageH - imgH) / 2;
+
+    pdf.addImage(canvas, 'PNG', x, y, imgW, imgH);
+
+    const file = new File(
+      [pdf.output('blob')],
+      `${state.sheet}.pdf`,
+      { type:'application/pdf' }
+    );
+
+    await navigator.share({
+      title: state.sheet,
+      text: `Laporan ${state.sheet}`,
+      files: [file]
+    });
+
+  }catch(err){
+    Swal.fire({icon:'error',title:'Gagal Share',text:err.message||err});
+  }finally{
+    target.classList.add('d-none');
+    toggle.classList.remove('d-none');
+    hideLoading();
+  }
+}
+
+/* == INIT == */
+document.addEventListener('DOMContentLoaded',loadSheets);
+</script>
+
+</body>
+</html>
