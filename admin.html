@@ -54,12 +54,12 @@ tfoot th,tfoot td{ border:none!important;}
 </style>
 </head>
 
-<body class="bg-light-subtle py-5">
+<body class="bg-light-subtle">
 
 <!-- FLOAT BUTTON -->
 <div id="floatBtn"><img src="img/float.svg"></div>
 
-<div class="container py-5">
+<div class="container py-2">
 
   <!-- HEADER -->
   <div class="d-flex justify-content-between px-2 border-bottom">
@@ -300,13 +300,7 @@ const hours = new Date().toLocaleString('id-ID', { hour: '2-digit',minute: '2-di
 const months = new Date().toLocaleDateString('id-ID',{month:'long',year:'numeric'});
 
 /* == STATE == */
-const state = {
-  sheet:'',
-  month:'',
-  data:[],
-  view:[],
-  locked:false
-};
+const state = {sheet:'',month:'',data:[],view:[],locked:false,times: new Date().toLocaleDateString('id-ID',{weekday:'long',day:'2-digit',month:'short',year:'numeric'}),hours: new Date().toLocaleString('id-ID', { hour: '2-digit',minute: '2-digit'}),months: new Date().toLocaleDateString('id-ID',{month:'long',year:'numeric'})};
 
 /* == UTIL == */
 function unlockSheet(){
@@ -363,10 +357,10 @@ async function loadSheets(){
       loadData();
     };
 
-    [datestamp1,datestamp2].forEach(el=>el.textContent = times);
-    date.value = times;
-    hour.value=hours;
-    month.value = months;
+    [datestamp1,datestamp2].forEach(el=>el.textContent = state.times);
+    date.value = state.times;
+    hour.value=state.hours;
+    month.value = state.months;
   }catch(err){
     Swal.fire({icon:'error',text:err.message||err});
   }finally{
@@ -442,12 +436,12 @@ async function loadData(){
 
   selectPeriod.onchange = e=>{
     const val = e.target.value;
-    state.month = val || months;
+    state.month = val || state.months;
     state.view = val ? state.data.filter(d=>d.month===val) : [...state.data];
 
     datestamp.textContent = val
-      ? state.view.map(d=>d.date).filter(Boolean).pop() || times
-      : times;
+      ? state.view.map(d=>d.date).filter(Boolean).pop() || state.times
+      : state.times;
     renderTable();
   };
   renderTable();
@@ -560,9 +554,9 @@ async function saveRow(){
       action : row.value ? 'set_row' : 'add_row',
       name : state.sheet,
       row  : row.value,
-      date : `'${date.value||times}`,
-      hour : `'${hour.value||hours}`,
-      month: `'${month.value||months}`,
+      date : `'${date.value||state.times}`,
+      hour : `'${hour.value||state.hours}`,
+      month: `'${month.value||state.months}`,
       work : work.checked,
       over : over.checked,
       pmss : pmss.checked,
@@ -593,9 +587,9 @@ async function delRow(){
 
 function resetForm(){
   row.value='';
-  date.value=times;
-  hour.value=hours;
-  month.value=months;
+  date.value=state.times;
+  hour.value=state.hours;
+  month.value=state.months;
   work.checked=over.checked=pmss.checked=false;
   pays.value=desc.value='';
   del.classList.add('d-none');
