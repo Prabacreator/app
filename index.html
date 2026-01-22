@@ -47,10 +47,7 @@ tfoot th,tfoot td{border:none!important;}
 <div id="floatBtn" class="d-none"><img src="img/float.svg"></div>
 
 <div class="container py-2 d-none" id="mainContainer">
-  <!-- CLOSE-OUT -->
-  <div class="text-end pe-2">
-    <img class="ms-2" onclick="closeBtn()" src="img/logout.svg"/>
-  </div>
+
   <!-- HEADER -->
   <div class="d-flex justify-content-between px-2 border-bottom align-items-center">
     <div class="fs-1 mt-3 fw-bold text-info" style="text-shadow:1px 4px 4px #000">
@@ -66,8 +63,13 @@ tfoot th,tfoot td{border:none!important;}
   </div>
 
   <!-- TABLE -->
-  <div class="table-responsive">
+  <div class="table-responsive h-75">
     <table id="table"></table>
+  </div>
+  
+  <!-- CLOSE-OUT -->
+  <div class="text-center">
+    <img class="ms-2" style="width: 50px" onclick="closeBtn()" src="img/logout.svg"/>
   </div>
 </div>
 
@@ -119,7 +121,7 @@ tfoot th,tfoot td{border:none!important;}
 </div>
 
 
-<!-- == OFFCANVAS FORM LOGIN == -->
+<!-- == OFFCANVAS FORM OPEN == -->
 <div class="offcanvas offcanvas-start w-100 h-100" tabindex="-1" id="formSheet">
   <div class="offcanvas-body d-flex justify-content-center flex-column">
     <div class="card text-center">
@@ -145,72 +147,6 @@ tfoot th,tfoot td{border:none!important;}
 <script src="js/jspdf.umd.min.js"></script>
 
 <script>
-/* == FLOAT BUTTON == */
-const btn = document.getElementById('floatBtn');
-const KEY = 'floatBtnPos';
-let drag=false, ox=0, oy=0;
-
-const loadPos = ()=>{
-  const p = JSON.parse(localStorage.getItem(KEY));
-  if(p){
-    btn.style.left = p.x+'px';
-    btn.style.top  = p.y+'px';
-    btn.style.right = 'auto';
-    btn.style.bottom = 'auto';
-  }
-};
-
-const savePos = ()=>{
-  const r = btn.getBoundingClientRect();
-  localStorage.setItem(KEY, JSON.stringify({x:r.left,y:r.top}));
-};
-
-const start = e=>{
-  drag = true;
-  btn.style.transition='none';
-  const r = btn.getBoundingClientRect();
-  const x = e.touches ? e.touches[0].clientX : e.clientX;
-  const y = e.touches ? e.touches[0].clientY : e.clientY;
-  ox = x - r.left;
-  oy = y - r.top;
-};
-
-const move = e=>{
-  if(!drag) return;
-  e.preventDefault();
-  const x = e.touches ? e.touches[0].clientX : e.clientX;
-  const y = e.touches ? e.touches[0].clientY : e.clientY;
-  btn.style.left = (x-ox)+'px';
-  btn.style.top  = (y-oy)+'px';
-  btn.style.right='auto';
-  btn.style.bottom='auto';
-};
-
-const end = ()=>{
-  if(!drag) return;
-  drag=false;
-  const r = btn.getBoundingClientRect();
-  const vw = innerWidth, vh = innerHeight;
-  const x = r.left < vw/2 ? 10 : vw - r.width - 10;
-  const y = Math.max(10, Math.min(vh-r.height-10, r.top));
-  btn.style.transition='left .25s, top .25s';
-  btn.style.left = x+'px';
-  btn.style.top  = y+'px';
-  savePos();
-};
-
-btn.addEventListener('mousedown',start);
-document.addEventListener('mousemove',move);
-document.addEventListener('mouseup',end);
-btn.addEventListener('touchstart',start,{passive:false});
-document.addEventListener('touchmove',move,{passive:false});
-document.addEventListener('touchend',end);
-
-btn.addEventListener('click',()=>{
-  if(drag) return;
-  toggleOffCanvas();
-});
-
 /* == KONSTANTA & HELPER == */
 const url = 'https://script.google.com/macros/s/AKfycbyUS5u9eqEs4GmkZ18b-9mFwlm8-hg3mvFs5MAdONv7d0E-0rYy5RhfVrVuM-BcKBNIsQ/exec';
 const $ = id => document.getElementById(id);
@@ -218,6 +154,23 @@ const isTrue = v => v===true || v==='TRUE' || v==='true' || v===1 || v==='1';
 
 /* == STATE == */
 const state = {sheet:'',month:'',data:[],view:[],times: new Date().toLocaleDateString('id-ID',{weekday:'long',day:'2-digit',month:'short',year:'numeric'}),hours: new Date().toLocaleString('id-ID', { hour: '2-digit',minute: '2-digit'}),months: new Date().toLocaleDateString('id-ID',{month:'long',year:'numeric'})};
+
+/* == FLOAT BUTTON == */
+const btn= document.getElementById('floatBtn');
+const KEY= 'floatBtnPos';
+let drag=false, ox=0, oy=0;
+const loadPos = ()=>{const p = JSON.parse(localStorage.getItem(KEY));if(p){btn.style.left = p.x+'px';btn.style.top  = p.y+'px';btn.style.right = 'auto';btn.style.bottom = 'auto';}};
+const savePos = ()=>{const r = btn.getBoundingClientRect();localStorage.setItem(KEY, JSON.stringify({x:r.left,y:r.top}));};
+const start = e=>{drag = true; btn.style.transition='none'; const r = btn.getBoundingClientRect(); const x = e.touches ? e.touches[0].clientX : e.clientX; const y = e.touches ? e.touches[0].clientY : e.clientY; ox = x - r.left; oy = y - r.top;};
+const move = e=>{if(!drag) return; e.preventDefault(); const x = e.touches ? e.touches[0].clientX : e.clientX; const y = e.touches ? e.touches[0].clientY : e.clientY; btn.style.left = (x-ox)+'px'; btn.style.top  = (y-oy)+'px'; btn.style.right='auto'; btn.style.bottom='auto';};
+const end = ()=>{if(!drag) return; drag=false; const r = btn.getBoundingClientRect(); const vw = innerWidth, vh = innerHeight; const x = r.left < vw/2 ? 10 : vw - r.width - 10; const y = Math.max(10, Math.min(vh-r.height-10, r.top)); btn.style.transition='left .25s, top .25s'; btn.style.left = x+'px'; btn.style.top  = y+'px'; savePos();};
+btn.addEventListener('mousedown',start);
+document.addEventListener('mousemove',move);
+document.addEventListener('mouseup',end);
+btn.addEventListener('touchstart',start,{passive:false});
+document.addEventListener('touchmove',move,{passive:false});
+document.addEventListener('touchend',end);
+btn.addEventListener('click',()=>{if(drag) return; toggleOffCanvas();});
 
 /* == STORAGE KEY == */
 const LOGIN_KEY = 'jobActivityLogin';
@@ -438,7 +391,7 @@ function resetForm(){
 /* == LOGIN & LOGOUT == */
 async function openBtn(){
   const sheetName = $('openSheet').value.trim();
-  if(!sheetName) return Swal.fire({icon:'warning',text:'Masukkan namamu'});
+  if(!sheetName) return Swal.fire({icon:'warning',text:'Silakan masukkan namamu'});
 
   // ✅ Jika admin → buka index2.html
   if(sheetName.toLowerCase() === 'admin'){
@@ -475,10 +428,10 @@ function doOpen(sheetName){
 
 function closeBtn(){
   Swal.fire({
-    text:'Yakin Anda mau Logout ?',
+    text:'Yakin Anda mau Keluar ?',
     icon:'question',
     showCancelButton:true,
-    confirmButtonText:'Ya, Logout',
+    confirmButtonText:'Ya',
     cancelButtonText:'Batal'
   }).then(res=>{
     if(!res.isConfirmed) return;
@@ -509,6 +462,5 @@ function loadSheets(){
 /* == INIT == */
 document.addEventListener('DOMContentLoaded',loadSheets);
 </script>
-
 </body>
 </html>
